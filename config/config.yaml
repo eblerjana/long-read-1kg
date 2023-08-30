@@ -1,0 +1,13 @@
+# callsets
+callset_vcfs:
+ cuteSV: "preliminary-testing/cuteSV-chm13-chr22.vcf"
+
+
+# per chromosome minigraph GFAs. If full genome graph, use key "all"
+minigraph_gfa: 
+ chr22: "/gpfs/project/projects/medbioinf/data/share/globus/1000g-ont/rgfa/chm13-90c.r518-chr22.gfa"
+
+
+# reference sequence underlying the callsets
+reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-chm13/results/data/fasta/chm13.fa"
+

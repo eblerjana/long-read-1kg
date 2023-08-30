@@ -1,0 +1,9 @@
+configfile: "config/config.yaml"
+
+include: "rules/extend-graph-chrom.smk"
+
+chromosomes = [i for i in config["minigraph_gfa"].keys()]
+
+rule all:
+	input:
+		expand("results/minigraph/minigraph-extended_{chrom}.gfa", chrom=chromosomes)
