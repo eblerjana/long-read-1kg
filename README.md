@@ -1,2 +1,3 @@
-# long-read-1kg
-Code written for the long-read 1KG project
+# Graph augmentation pipeline
+
+This pipeline extends an existing minigraph pangenome graph by adding variant calls produced by different callsets (such as Delly, Sniffles2 or CuteSV).
