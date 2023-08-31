@@ -6,4 +6,5 @@ chromosomes = [i for i in config["minigraph_gfa"].keys()]
 
 rule all:
 	input:
-		expand("results/minigraph/minigraph-extended_{chrom}.gfa", chrom=chromosomes)
+		expand("results/minigraph/minigraph-extended_{chrom}.gfa", chrom=chromosomes),
+		expand("results/statistics/{version}-graph-{chrom}_bubbles.tsv", version=["original", "extended"], chrom=chromosomes)

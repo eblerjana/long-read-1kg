@@ -19,6 +19,8 @@ checkpoint create_paths:
 		callset = "|".join(callsets)
 	log:
 		"results/paths/{callset}/{callset}.log"
+	benchmark:
+		"results/paths/{callset}/{callset}-benchmark.txt"
 	params:
 		outprefix = "results/paths/{callset}/{callset}"
 	shell:
@@ -43,6 +45,27 @@ rule compress_vcf:
 
 
 
+
+rule extract_region_fasta:
+	input:
+		config['reference']
+	output:
+		fasta=temp("results/reference/reference_{chrom}.fa"),
+		fai=temp("results/reference/reference_{chrom}.fa.fai")
+	conda:
+		"../envs/minigraph.yml"
+	log:
+		"results/reference/reference_{chrom}.log"
+	benchmark:
+		"results/reference/reference_{chrom}_benchmark.txt"
+	shell:
+		"""
+		samtools faidx {input} {wildcards.chrom} > {output.fasta}
+		samtools faidx {output.fasta}
+		"""
+
+
+
 rule compute_consensus_region:
 	"""
 	Given the haploid VCFs produced for each path, construct
@@ -50,17 +73,19 @@ rule compute_consensus_region:
 	genome for specified region
 	"""
 	input:
-		reference=config['reference'],
+		reference="results/reference/reference_{chrom}.fa",
 		vcf = "results/paths/{callset}/{callset}_path{path_id}.vcf.gz"
 	output:
 		fasta = temp("results/paths/{callset}/{callset}_path{path_id}_{chrom}.fa"),
 		tmp = temp("results/paths/{callset}/tmp/{callset}_path{path_id}_{chrom}.vcf.gz"),
 		tbi = temp("results/paths/{callset}/tmp/{callset}_path{path_id}_{chrom}.vcf.gz.tbi")
 	log:
-		"results/paths/{callset}_path{path_id}_{chrom}_consensus.log"
+		"results/paths/{callset}/{callset}_path{path_id}_{chrom}_consensus.log"
 	wildcard_constraints:
 		callset = "|".join(callsets),
 		chrom = "|".join([c for c in chromosomes if c != "all"])
+	benchmark:
+		"results/paths/{callset}/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
 	conda:
 		"../envs/minigraph.yml"
 	shell:
@@ -88,6 +113,8 @@ rule compute_consensus_full:
 	wildcard_constraints:
 		callset = "|".join(callsets),
 		chrom = "all"
+	benchmark:
+		"results/paths/{callset}/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
 	conda:
 		"../envs/minigraph.yml"
 	shell:
@@ -118,8 +145,10 @@ rule extend_minigraph:
 	log:
 		"results/minigraph/minigraph_{chrom}.log"
 	resources:
-		mem_total_mb=50000,
-		runtime_hrs=5
+		mem_total_mb=100000,
+		runtime_hrs=10
+	benchmark:
+		"results/minigraph/minigraph_{chrom}_benchmark.txt"
 	threads: 24
 	conda:
 		"../envs/minigraph.yml"
@@ -127,3 +156,19 @@ rule extend_minigraph:
 		"""
 		minigraph -cxggs -t{threads} {input.minigraph} {input.paths} 2> {log} 1> {output} 
 		"""
+
+
+rule gfa_bubble_stats:
+	"""
+	Compute number of bubbles in the GFA files before/after inserting variants
+	"""
+	input:
+		lambda wildcards: config["minigraph_gfa"][wildcards.chrom] if wildcards.version == "original" else "results/minigraph/minigraph-extended_{chrom}.gfa"
+	output:
+		"results/statistics/{version}-graph-{chrom}_bubbles.tsv"
+	conda:
+		"../envs/minigraph.yml"
+	wildcard_constraints:
+		version = "original|extended"
+	shell:
+		"gfatools bubble {input} > {output}"
