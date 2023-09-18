@@ -1,6 +1,7 @@
 import unittest, importlib
 import tempfile
 import io
+import gzip
 from contextlib import redirect_stdout
 from create_paths import Variant, Cluster, variants_overlap, group_variants, print_vcf, run_paths
 
@@ -100,8 +101,8 @@ class Test_run_paths(unittest.TestCase):
 			"chr1	3	.	CTAGC	A	.	PASS	.	GT	0	0	1",
 			"chr1	10	.	ATGATG	G	.	PASS	.	GT	1	0	0" 	]
 
-		filename = "tmp.vcf"
-		with open(filename, 'w') as tmp:
+		filename = "tmp.vcf.gz"
+		with gzip.open(filename, 'wt') as tmp:
 			for line in vcf_lines:
 				tmp.write(line + '\n')
 		run_paths(filename, None)
@@ -111,7 +112,7 @@ class Test_print_vcf(unittest.TestCase):
 	def test_print_vcf(self):
 		variants = [ Variant("chr1", 0, "ATGCT", "A", 0),  Variant("chr1", 1, "T", "A", 1),  Variant("chr1", 3, "C", "A", 2),  Variant("chr1", 3, "CTAGC", "A", 3)]
 		assignments = group_variants(variants)
-#		print_vcf(variants, assignments)
+		print_vcf(variants, assignments)
 
 
 
