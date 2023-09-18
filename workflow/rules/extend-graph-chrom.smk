@@ -2,6 +2,7 @@ configfile: "config/config.yaml"
 callsets = [c for c in config["callset_vcfs"].keys()]
 chromosomes = [i for i in config["minigraph_gfa"].keys()]
 
+print(callsets)
 
 checkpoint create_paths:
 	"""
@@ -11,18 +12,18 @@ checkpoint create_paths:
 	input:
 		lambda wildcards: config['callset_vcfs'][wildcards.callset]
 	output:
-		directory("results/paths/{callset}/")
+		directory("results/paths/{callset}_vcfs/")
 	resources:
 		mem_total_mb=10000,
 		runtime_hrs=1
 	wildcard_constraints:
 		callset = "|".join(callsets)
 	log:
-		"results/paths/{callset}/{callset}.log"
+		"results/paths/{callset}_vcfs/{callset}.log"
 	benchmark:
-		"results/paths/{callset}/{callset}-benchmark.txt"
+		"results/paths/{callset}_vcfs/{callset}-benchmark.txt"
 	params:
-		outprefix = "results/paths/{callset}/{callset}"
+		outprefix = "results/paths/{callset}_vcfs/{callset}"
 	shell:
 		"""
 		python3 workflow/scripts/create_paths.py -vcf {input} -single {params.outprefix} &> {log}
@@ -32,9 +33,9 @@ checkpoint create_paths:
 
 rule compress_vcf:
 	input:
-		"results/paths/{callset}/{callset}_path{path_id}.vcf"
+		"results/paths/{callset}_vcfs/{callset}_path{path_id}.vcf"
 	output:
-		"results/paths/{callset}/{callset}_path{path_id}.vcf.gz"
+		"results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz"
 	conda:
 		"../envs/minigraph.yml"
 	shell:
@@ -74,20 +75,22 @@ rule compute_consensus_region:
 	"""
 	input:
 		reference="results/reference/reference_{chrom}.fa",
-		vcf = "results/paths/{callset}/{callset}_path{path_id}.vcf.gz"
+		vcf = "results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz"
 	output:
-		fasta = temp("results/paths/{callset}/{callset}_path{path_id}_{chrom}.fa"),
-		tmp = temp("results/paths/{callset}/tmp/{callset}_path{path_id}_{chrom}.vcf.gz"),
-		tbi = temp("results/paths/{callset}/tmp/{callset}_path{path_id}_{chrom}.vcf.gz.tbi")
+		fasta = temp("results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}.fa"),
+		tmp = temp("results/paths/{callset}_fasta/tmp/{callset}_path{path_id}_{chrom}.vcf.gz"),
+		tbi = temp("results/paths/{callset}_fasta/tmp/{callset}_path{path_id}_{chrom}.vcf.gz.tbi")
 	log:
-		"results/paths/{callset}/{callset}_path{path_id}_{chrom}_consensus.log"
+		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus.log"
 	wildcard_constraints:
 		callset = "|".join(callsets),
-		chrom = "|".join([c for c in chromosomes if c != "all"])
+		chrom = "|".join([c for c in chromosomes if c != "all"]) + "|^all"
 	benchmark:
-		"results/paths/{callset}/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
+		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
 	conda:
 		"../envs/minigraph.yml"
+	params:
+		name = "{callset}_{path_id}_{chrom}"
 	shell:
 		"""
 		bcftools view -r {wildcards.chrom} {input.vcf} | bgzip > {output.tmp}
@@ -105,21 +108,23 @@ rule compute_consensus_full:
 	"""
 	input:
 		reference=config['reference'],
-		vcf = "results/paths/{callset}/{callset}_path{path_id}.vcf.gz"
+		vcf = "results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz"
 	output:
-		fasta = temp("results/paths/{callset}/{callset}_path{path_id}_{chrom}.fa")
+		fasta = "results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}.fa"
 	log:
-		"results/paths/{callset}_path{path_id}_{chrom}_consensus.log"
+		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus.log"
 	wildcard_constraints:
 		callset = "|".join(callsets),
 		chrom = "all"
 	benchmark:
-		"results/paths/{callset}/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
+		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
 	conda:
 		"../envs/minigraph.yml"
+	params:
+		name = "{callset}_{path_id}_{chrom}"
 	shell:
 		"""
-		bcftools consensus -f {input.reference} {input.vcf} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id} > {output.fasta}
+		bcftools consensus -f {input.reference} {input.vcf} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id}  > {output.fasta}
 		"""
 
 
@@ -130,8 +135,8 @@ def aggregate_input(wildcards):
 	outfiles = []
 	for callset in callsets:
 		checkpoint_output = checkpoints.create_paths.get(callset=callset).output[0]
-		outfiles += [i for i in  expand("results/paths/" + callset +  "/" + callset + "_path{path_id}_{chrom}.fa", chrom=wildcards.chrom, path_id = glob_wildcards(os.path.join(checkpoint_output, callset + "_path{path_id}.vcf")).path_id)]
-	return outfiles
+		outfiles += [i for i in  expand("results/paths/" + callset +  "_fasta/" + callset + "_path{path_id}_{chrom}.fa", chrom=wildcards.chrom, path_id = glob_wildcards(os.path.join(checkpoint_output, callset + "_path{path_id}.vcf")).path_id)]
+	return sorted(outfiles)
 
 rule extend_minigraph:
 	"""
@@ -145,7 +150,7 @@ rule extend_minigraph:
 	log:
 		"results/minigraph/minigraph_{chrom}.log"
 	resources:
-		mem_total_mb=100000,
+		mem_total_mb=200000,
 		runtime_hrs=10
 	benchmark:
 		"results/minigraph/minigraph_{chrom}_benchmark.txt"
@@ -156,19 +161,3 @@ rule extend_minigraph:
 		"""
 		minigraph -cxggs -t{threads} {input.minigraph} {input.paths} 2> {log} 1> {output} 
 		"""
-
-
-rule gfa_bubble_stats:
-	"""
-	Compute number of bubbles in the GFA files before/after inserting variants
-	"""
-	input:
-		lambda wildcards: config["minigraph_gfa"][wildcards.chrom] if wildcards.version == "original" else "results/minigraph/minigraph-extended_{chrom}.gfa"
-	output:
-		"results/statistics/{version}-graph-{chrom}_bubbles.tsv"
-	conda:
-		"../envs/minigraph.yml"
-	wildcard_constraints:
-		version = "original|extended"
-	shell:
-		"gfatools bubble {input} > {output}"

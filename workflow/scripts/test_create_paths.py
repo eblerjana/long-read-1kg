@@ -104,7 +104,7 @@ class Test_run_paths(unittest.TestCase):
 		with open(filename, 'w') as tmp:
 			for line in vcf_lines:
 				tmp.write(line + '\n')
-		run_paths(filename)
+		run_paths(filename, None)
 
 
 class Test_print_vcf(unittest.TestCase):

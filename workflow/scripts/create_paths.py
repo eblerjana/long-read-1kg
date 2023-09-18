@@ -1,5 +1,7 @@
 import sys
 import argparse
+import random
+import gzip
 
 class Variant:
 	"""
@@ -13,6 +15,7 @@ class Variant:
 		self._end = start + len(ref_allele)
 		self._index = var_index
 		self._id = var_id
+		self._last_in_cluster = False
 
 	def chrom(self):
 		return self._chrom
@@ -34,6 +37,13 @@ class Variant:
 
 	def id(self):
 		return self._id
+
+	def set_last_in_cluster(self):
+		self._last_in_cluster = True
+
+	def is_last(self):
+		return self._last_in_cluster
+
 
 
 def variants_overlap(var1: Variant, var2: Variant):
@@ -103,6 +113,7 @@ def group_variants(variants):
 	for i,c in enumerate(clusters):
 		for v in c:
 			assignments[v.index()] = i
+
 	return assignments
 
 
@@ -152,21 +163,20 @@ def print_individual_vcfs(variants, assignments, prefix):
 					vcf_line = [var.chrom(), str(var.start()), var.id(), var.ref(), var.alt(), '.', 'PASS', '.', 'GT', '1']
 					outfile.write('\t'.join(vcf_line) + '\n')
 
-	
+
 
 def run_paths(filename, single):
 	# list of all variants in VCF
 	all_variants = []
 	# assigns a group to each variant
 	groups = []
-
 	total_variants = 0
 	skipped_variants = 0
 
 	current_cluster = []
 	prev_end = 0
 	prev_chrom = None
-	for line in open(filename, 'r'):
+	for line in gzip.open(filename, 'rt'):
 		if line.startswith('#'):
 			# header line
 			continue
@@ -205,6 +215,7 @@ def run_paths(filename, single):
 			assert len(assignments) == len(current_cluster)
 			groups += assignments
 			all_variants += current_cluster
+			all_variants[-1].set_last_in_cluster()
 			current_cluster = []
 
 		var_id = fields[2]
@@ -222,8 +233,16 @@ def run_paths(filename, single):
 		groups += assignments
 		all_variants += current_cluster
 
+	# randomly distiribute groupings to paths
+	mapping = [i for i in range(max(groups) + 1)]
+	for i in range(len(all_variants)):
+		groups[i] = mapping[groups[i]]
+		if all_variants[i].is_last():
+			random.shuffle(mapping)
+
+
 	if single:
-		print_individual_vcfs(all_variants, groups, single)
+		print_individual_vcfs(all_variants,groups, single)
 	else:
 		print_vcf(all_variants, groups)
 
