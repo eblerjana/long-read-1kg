@@ -65,6 +65,18 @@ class Test_Cluster(unittest.TestCase):
 
 		self.assertFalse(cluster.overlaps_last(variant1))
 
+	def test_cluster3(self):
+		cluster = Cluster()
+		variant1 = Variant("chr1", 100, "AAAA", "A", 0)
+		variant2 = Variant("chr1", 110, "A", "T", 0)
+
+		cluster.add_var(variant1)
+
+		self.assertFalse(cluster.overlaps_last(variant2))
+		self.assertFalse(cluster.overlaps_last(variant2, 3))
+		self.assertTrue(cluster.overlaps_last(variant2, 4))
+		
+
 
 class Test_group_variants(unittest.TestCase):
 	def test_group1(self):
@@ -105,7 +117,7 @@ class Test_run_paths(unittest.TestCase):
 		with gzip.open(filename, 'wt') as tmp:
 			for line in vcf_lines:
 				tmp.write(line + '\n')
-		run_paths(filename, None)
+		run_paths(filename, None, 0)
 
 
 class Test_print_vcf(unittest.TestCase):

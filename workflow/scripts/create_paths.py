@@ -46,20 +46,27 @@ class Variant:
 
 
 
-def variants_overlap(var1: Variant, var2: Variant):
+def variants_overlap(var1: Variant, var2: Variant, margin = 0):
 	"""
 	checks whether two variant intervals are overlapping.
 	"""
 	if var1.chrom() != var2.chrom():
 		return False
-	if var1.start() < var2.start():
-		if var2.start() < var1.end():
+
+	start1 = max(var1.start()-margin, 0)
+	end1 = var1.end() + margin
+
+	start2 = max(var2.start()-margin, 0)
+	end2 = var2.end() + margin
+
+	if start1 < start2:
+		if start2 < end1:
 			return True
 		else:
 			return False
 
 	else:
-		if var1.start() < var2.end():
+		if start1 < end2:
 			return True
 		else:
 			return False
@@ -77,19 +84,19 @@ class Cluster:
 	def merge(self, cluster):
 		self._variants = cluster._variants
 
-	def overlaps_last(self, variant: Variant):
+	def overlaps_last(self, variant: Variant, margin = 0):
 		# overlap last variant overlaps
 		if not self._variants:
 			return False
 		else:
-			return variants_overlap(variant, self._variants[-1])
+			return variants_overlap(variant, self._variants[-1], margin)
 
 	def __iter__(self):
 		for v in self._variants:
 			yield v
 	
 
-def group_variants(variants):
+def group_variants(variants, margin = 0):
 	"""
 	Given a list of variant clusters, merge non-overlapping clusters.
 	"""
@@ -99,7 +106,7 @@ def group_variants(variants):
 	for var in variants:
 		added_to_cluster = False
 		for c in clusters:
-			if not c.overlaps_last(var):
+			if not c.overlaps_last(var, margin):
 				c.add_var(var)
 				added_to_cluster = True
 				break
@@ -165,7 +172,7 @@ def print_individual_vcfs(variants, assignments, prefix):
 
 
 
-def run_paths(filename, single):
+def run_paths(filename, single, margin):
 	# list of all variants in VCF
 	all_variants = []
 	# assigns a group to each variant
@@ -211,7 +218,7 @@ def run_paths(filename, single):
 
 		if ((start >= prev_end) or (prev_chrom != chrom)) and current_cluster:
 			# process current cluster and group non-overlapping variants
-			assignments = group_variants(current_cluster)
+			assignments = group_variants(current_cluster, margin)
 			assert len(assignments) == len(current_cluster)
 			groups += assignments
 			all_variants += current_cluster
@@ -228,7 +235,7 @@ def run_paths(filename, single):
 
 	# handle last cluster (in case there is one)
 	if current_cluster:
-		assignments = group_variants(current_cluster)
+		assignments = group_variants(current_cluster, margin)
 		assert len(assignments) == len(current_cluster)
 		groups += assignments
 		all_variants += current_cluster
@@ -258,5 +265,6 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(prog='create_paths.py', description=__doc__)
 	parser.add_argument('-vcf', metavar='VCF', required=True, help='callset in VCF format.')
 	parser.add_argument('-single', metavar='PREFIX', default=None, help='write one VCF per path to <PREFIX>_<pathID>.vcf')
+	parser.add_argument('-margin', metavar='MARGIN', type=int, default=0, help='margin to consider around variants.')
 	args = parser.parse_args()
-	run_paths(args.vcf, args.single)
+	run_paths(args.vcf, args.single, args.margin)

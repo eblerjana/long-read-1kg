@@ -2,6 +2,8 @@ configfile: "config/config.yaml"
 callsets = [c for c in config["callset_vcfs"].keys()]
 chromosomes = [i for i in config["minigraph_gfa"].keys()]
 
+margin = 500 # (= 1000)
+
 print(callsets)
 
 checkpoint create_paths:
@@ -26,7 +28,7 @@ checkpoint create_paths:
 		outprefix = "results/paths/{callset}_vcfs/{callset}"
 	shell:
 		"""
-		python3 workflow/scripts/create_paths.py -vcf {input} -single {params.outprefix} &> {log}
+		python3 workflow/scripts/create_paths.py -vcf {input} -single {params.outprefix} -margin {margin} &> {log}
 		"""
 
 

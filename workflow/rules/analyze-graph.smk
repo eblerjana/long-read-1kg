@@ -77,7 +77,7 @@ rule minigraph_align:
 	wildcard_constraints:
 		version = "original|extended"
 	resources:
-		mem_total_mb=50000,
+		mem_total_mb=200000,
 		runtime_hrs=5
 	threads: 24
 	conda:
