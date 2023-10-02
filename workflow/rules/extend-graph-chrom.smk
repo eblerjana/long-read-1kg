@@ -4,7 +4,6 @@ chromosomes = [i for i in config["minigraph_gfa"].keys()]
 
 margin = 500 # (= 1000)
 
-print(callsets)
 
 checkpoint create_paths:
 	"""
@@ -78,10 +77,13 @@ rule compute_consensus_region:
 	input:
 		reference="results/reference/reference_{chrom}.fa",
 		vcf = "results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz"
+		bed = config['mask']
 	output:
 		fasta = temp("results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}.fa"),
 		tmp = temp("results/paths/{callset}_fasta/tmp/{callset}_path{path_id}_{chrom}.vcf.gz"),
-		tbi = temp("results/paths/{callset}_fasta/tmp/{callset}_path{path_id}_{chrom}.vcf.gz.tbi")
+		tbi = temp("results/paths/{callset}_fasta/tmp/{callset}_path{path_id}_{chrom}.vcf.gz.tbi"),
+		fasta_tmp1 = temp("results/paths/{callset}_fasta/tmp1_{callset}_path{path_id}_{chrom}.fa"),
+		fasta_tmp2 = temp("results/paths/{callset}_fasta/tmp1_{callset}_path{path_id}_{chrom}.fa")
 	log:
 		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus.log"
 	wildcard_constraints:
@@ -97,7 +99,9 @@ rule compute_consensus_region:
 		"""
 		bcftools view -r {wildcards.chrom} {input.vcf} | bgzip > {output.tmp}
 		tabix -p vcf {output.tmp}
-		bcftools consensus -f {input.reference} {output.tmp} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id} > {output.fasta}
+		bcftools consensus -f {input.reference} {output.tmp} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id} > {output.fasta_tmp1}
+		bedtools maskfasta -fi {output.fasta_tmp1} -bed {input.bed} -fo {output.fasta_tmp2}
+		cat {output.fasta_tmp2} | python3 workflow/scripts/split-fasta.py > {output.fasta}
 		"""
 
 
@@ -110,14 +114,20 @@ rule compute_consensus_full:
 	"""
 	input:
 		reference=config['reference'],
-		vcf = "results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz"
+		vcf = "results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz",
+		bed = config['mask']
 	output:
+		fasta_tmp1 = temp("results/paths/{callset}_fasta/tmp1_{callset}_path{path_id}_{chrom}.fa"),
+		fasta_tmp2 = "results/paths/{callset}_fasta/tmp2_{callset}_path{path_id}_{chrom}.fa",
 		fasta = "results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}.fa"
 	log:
 		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus.log"
 	wildcard_constraints:
 		callset = "|".join(callsets),
 		chrom = "all"
+	resources:
+		mem_total_mb = 20000,
+		runtime_hrs = 4
 	benchmark:
 		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
 	conda:
@@ -126,7 +136,9 @@ rule compute_consensus_full:
 		name = "{callset}_{path_id}_{chrom}"
 	shell:
 		"""
-		bcftools consensus -f {input.reference} {input.vcf} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id}  > {output.fasta}
+			bcftools consensus -f {input.reference} {input.vcf} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id} > {output.fasta_tmp1}
+			bedtools maskfasta -fi {output.fasta_tmp1} -bed {input.bed} -fo {output.fasta_tmp2}
+			cat {output.fasta_tmp2} | python3 workflow/scripts/split-fasta.py > {output.fasta}
 		"""
 
 

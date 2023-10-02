@@ -26,6 +26,20 @@ rule gfa_bubble_stats:
 		"gfatools bubble {input} > {output}"
 
 
+rule plot_bubble_sizes:
+	"""
+	Plot histogram of bubble sizes
+	"""
+	input:
+		original = "results/statistics/bubbles/original_{chrom}_bubbles.tsv",
+		extended = "results/statistics/bubbles/extended_{chrom}_bubbles.tsv"
+	output:
+		"results/statistics/plots/{chrom}_bubbles.pdf"
+	shell:
+		"python3 workflow/scripts/plot-histogram.py -files {input.original} {input.extended} -labels original_graph_{wildcards.chrom} augmented_graph_{wildcards.chrom} -outname {output}"
+
+
+
 rule gaftools_order_gfa:
 	"""
 	Compute bubble statistics with gaftools order_gfa
@@ -84,7 +98,7 @@ rule minigraph_align:
 		"../envs/minigraph.yml"
 	shell:
 		"""
-		minigraph -cx lr -t{threads} {input.graph} {input.reads} 2> {log} 1> {output}
+		minigraph -cx lr -t{threads} {input.graph} {input.reads} --vc 2> {log} 1> {output}
 		"""
 
 

@@ -13,4 +13,5 @@ rule all:
 	input:
 		expand("results/minigraph/minigraph-extended_{chrom}.gfa", chrom=chromosomes),
 		expand("results/statistics/bubbles/{version}_{chrom}_bubbles.tsv", version=["original", "extended"], chrom=chromosomes),
-		expand("results/statistics/mapping/{version}_all_{sample}_{method}.stats", version=["original", "extended"], method=["minigraph"],  sample = samples)
+		expand("results/statistics/mapping/{version}_all_{sample}_{method}.stats", version=["original", "extended"], method=["minigraph"],  sample = samples),
+		expand("results/statistics/plots/{chrom}_bubbles.pdf", chrom=chromosomes)
