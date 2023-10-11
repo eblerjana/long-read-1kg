@@ -1,5 +1,4 @@
 configfile: "config/config.yaml"
-chromosomes = [i for i in config["minigraph_gfa"].keys()] 
 gaftools = config['gaftools']
 
 
@@ -13,9 +12,9 @@ rule gfa_bubble_stats:
 	Compute number of bubbles in the GFA files before/after inserting variants
 	"""
 	input:
-		lambda wildcards: config["minigraph_gfa"][wildcards.chrom] if wildcards.version == "original" else "results/minigraph/minigraph-extended_{chrom}.gfa"
+		lambda wildcards: config["minigraph_gfa"] if wildcards.version == "original" else "results/minigraph/minigraph-extended_all.gfa"
 	output:
-		"results/statistics/bubbles/{version}_{chrom}_bubbles.tsv"
+		"results/statistics/bubbles/{version}_all_bubbles.tsv"
 	conda:
 		"../envs/minigraph.yml"
 	wildcard_constraints:
@@ -31,12 +30,12 @@ rule plot_bubble_sizes:
 	Plot histogram of bubble sizes
 	"""
 	input:
-		original = "results/statistics/bubbles/original_{chrom}_bubbles.tsv",
-		extended = "results/statistics/bubbles/extended_{chrom}_bubbles.tsv"
+		original = "results/statistics/bubbles/original_all_bubbles.tsv",
+		extended = "results/statistics/bubbles/extended_all_bubbles.tsv"
 	output:
-		"results/statistics/plots/{chrom}_bubbles.pdf"
+		"results/statistics/plots/all_bubbles.pdf"
 	shell:
-		"python3 workflow/scripts/plot-histogram.py -files {input.original} {input.extended} -labels original_graph_{wildcards.chrom} augmented_graph_{wildcards.chrom} -outname {output}"
+		"python3 workflow/scripts/plot-histogram.py -files {input.original} {input.extended} -labels original_graph_all augmented_graph_all -outname {output}"
 
 
 
@@ -45,11 +44,11 @@ rule gaftools_order_gfa:
 	Compute bubble statistics with gaftools order_gfa
 	"""
 	input:
-		lambda wildcards: config["minigraph_gfa"][wildcards.chrom] if wildcards.version == "original" else "results/minigraph/minigraph-extended_{chrom}.gfa"
+		lambda wildcards: config["minigraph_gfa"] if wildcards.version == "original" else "results/minigraph/minigraph-extended_all.gfa"
 	output:
-		directory("results/statistics/ordering/{version}_{chrom}/")
+		directory("results/statistics/ordering/{version}_all/")
 	log:
-		"results/statistics/{version}/ordering/{version}_{chrom}_ordering.log"
+		"results/statistics/{version}/ordering/{version}_all_ordering.log"
 	wildcard_constraints:
 		version = "original|extended"
 	shell:
@@ -64,23 +63,12 @@ rule gaftools_order_gfa:
 #############################################
 
 
-rule concat_gfas:
-	input:
-		lambda wildcards: [config["minigraph_gfa"][c] for c in chromosomes] if wildcards.version == "original" else ["results/minigraph/minigraph-extended_" + c + ".gfa" for c in chromosomes]
-	output:
-		temp("results/minigraph/full/minigraph-{version}-full.gfa")
-	shell:
-		"""
-		cat {input} > {output}
-		"""
-
-
 rule minigraph_align:
 	"""
 	Align reads with minigraph to the graphs
 	"""
 	input:
-		graph = "results/minigraph/full/minigraph-{version}-full.gfa",
+		graph = lambda wildcards: config["minigraph_gfa"] if wildcards.version == "original" else "results/minigraph/minigraph-extended_all.gfa",
 		reads = lambda wildcards: config["reads"][wildcards.sample]
 	output:
 		"results/statistics/mapping/{version}_all_{sample}_minigraph.gaf"
@@ -107,7 +95,7 @@ rule graphaligner_align:
 	Align reads with Graphaligner to the graphs
 	"""
 	input:
-		graph = "results/minigraph/full/minigraph-{version}-full.gfa",
+		graph = lambda wildcards: config["minigraph_gfa"] if wildcards.version == "original" else "results/minigraph/minigraph-extended_all.gfa",
 		reads = lambda wildcards: config["reads"][wildcards.sample]
 	output:
 		"results/statistics/mapping/{version}_all_{sample}_graphaligner.gaf"

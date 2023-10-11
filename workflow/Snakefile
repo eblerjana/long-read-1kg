@@ -3,15 +3,13 @@ configfile: "config/config.yaml"
 include: "rules/extend-graph-chrom.smk"
 include: "rules/analyze-graph.smk"
 
-chromosomes = [i for i in config["minigraph_gfa"].keys()]
-
 samples = [s for s in config["reads"].keys()]
 
 print('samples', samples)
 
 rule all:
 	input:
-		expand("results/minigraph/minigraph-extended_{chrom}.gfa", chrom=chromosomes),
-		expand("results/statistics/bubbles/{version}_{chrom}_bubbles.tsv", version=["original", "extended"], chrom=chromosomes),
+		"results/minigraph/minigraph-extended_all.gfa",
+		expand("results/statistics/bubbles/{version}_all_bubbles.tsv", version=["original", "extended"]),
 		expand("results/statistics/mapping/{version}_all_{sample}_{method}.stats", version=["original", "extended"], method=["minigraph"],  sample = samples),
-		expand("results/statistics/plots/{chrom}_bubbles.pdf", chrom=chromosomes)
+		"results/statistics/plots/all_bubbles.pdf"

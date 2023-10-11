@@ -1,8 +1,44 @@
 configfile: "config/config.yaml"
 callsets = [c for c in config["callset_vcfs"].keys()]
-chromosomes = [i for i in config["minigraph_gfa"].keys()]
 
 margin = 500 # (= 1000)
+
+
+rule remove_centromer_variants:
+	"""
+	Remove variants in centromer regions from the VCF.
+	"""
+	input:
+		vcf = lambda wildcards: config['callset_vcfs'][wildcards.callset],
+		bed = config["mask"]
+	output:
+		"results/masked_vcfs/{callset}_masked.vcf.gz"
+	log:
+		"results/masked_vcfs/{callset}_masked.log"
+	conda:
+		"../envs/minigraph.yml"
+	shell:
+		"""
+		bedtools subtract -a {input.vcf} -b {input.bed} -A 2> {log} | bgzip > {output}
+		tabix -p vcf {output}
+		"""
+
+rule mask_reference:
+	"""
+	Set centromer regions to N.
+	"""
+	input:
+		fasta = config["reference"],
+		bed = config["mask"]
+	output:
+		"results/masked_reference/reference_masked.fa"
+	conda:
+		"../envs/minigraph.yml"
+	shell:
+		"""
+		bedtools maskfasta -fi {input.fasta} -bed {input.bed} -fo {output}
+		samtools faidx {output}
+		"""
 
 
 checkpoint create_paths:
@@ -11,7 +47,7 @@ checkpoint create_paths:
 	Produces a new VCF per subset with haploid haplotype path.
 	"""
 	input:
-		lambda wildcards: config['callset_vcfs'][wildcards.callset]
+		"results/masked_vcfs/{callset}_masked.vcf.gz"
 	output:
 		directory("results/paths/{callset}_vcfs/")
 	resources:
@@ -46,99 +82,38 @@ rule compress_vcf:
 		"""
 
 
-
-
-rule extract_region_fasta:
-	input:
-		config['reference']
-	output:
-		fasta=temp("results/reference/reference_{chrom}.fa"),
-		fai=temp("results/reference/reference_{chrom}.fa.fai")
-	conda:
-		"../envs/minigraph.yml"
-	log:
-		"results/reference/reference_{chrom}.log"
-	benchmark:
-		"results/reference/reference_{chrom}_benchmark.txt"
-	shell:
-		"""
-		samtools faidx {input} {wildcards.chrom} > {output.fasta}
-		samtools faidx {output.fasta}
-		"""
-
-
-
-rule compute_consensus_region:
-	"""
-	Given the haploid VCFs produced for each path, construct
-	a consensus sequence by inserting them into the reference
-	genome for specified region
-	"""
-	input:
-		reference="results/reference/reference_{chrom}.fa",
-		vcf = "results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz"
-		bed = config['mask']
-	output:
-		fasta = temp("results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}.fa"),
-		tmp = temp("results/paths/{callset}_fasta/tmp/{callset}_path{path_id}_{chrom}.vcf.gz"),
-		tbi = temp("results/paths/{callset}_fasta/tmp/{callset}_path{path_id}_{chrom}.vcf.gz.tbi"),
-		fasta_tmp1 = temp("results/paths/{callset}_fasta/tmp1_{callset}_path{path_id}_{chrom}.fa"),
-		fasta_tmp2 = temp("results/paths/{callset}_fasta/tmp1_{callset}_path{path_id}_{chrom}.fa")
-	log:
-		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus.log"
-	wildcard_constraints:
-		callset = "|".join(callsets),
-		chrom = "|".join([c for c in chromosomes if c != "all"]) + "|^all"
-	benchmark:
-		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
-	conda:
-		"../envs/minigraph.yml"
-	params:
-		name = "{callset}_{path_id}_{chrom}"
-	shell:
-		"""
-		bcftools view -r {wildcards.chrom} {input.vcf} | bgzip > {output.tmp}
-		tabix -p vcf {output.tmp}
-		bcftools consensus -f {input.reference} {output.tmp} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id} > {output.fasta_tmp1}
-		bedtools maskfasta -fi {output.fasta_tmp1} -bed {input.bed} -fo {output.fasta_tmp2}
-		cat {output.fasta_tmp2} | python3 workflow/scripts/split-fasta.py > {output.fasta}
-		"""
-
-
-
 rule compute_consensus_full:
 	"""
 	Given the haploid VCFs produced for each path, construct
 	a consensus sequence by inserting them into the reference
-	genome.
+	genome. Rename FASTA records to ensure that each FASTA file
+	has unique names (required by minigraph). Finally, remove all
+	Ns from sequences and split FASTA record at each N.
 	"""
 	input:
-		reference=config['reference'],
+		reference="results/masked_reference/reference_masked.fa",
 		vcf = "results/paths/{callset}_gz/{callset}_path{path_id}.vcf.gz",
-		bed = config['mask']
 	output:
-		fasta_tmp1 = temp("results/paths/{callset}_fasta/tmp1_{callset}_path{path_id}_{chrom}.fa"),
-		fasta_tmp2 = "results/paths/{callset}_fasta/tmp2_{callset}_path{path_id}_{chrom}.fa",
-		fasta = "results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}.fa"
+		fasta_tmp1 = temp("results/paths/{callset}_fasta/tmp1_{callset}_path{path_id}_all.fa"),
+		fasta = "results/paths/{callset}_fasta/{callset}_path{path_id}_all.fa"
 	log:
-		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus.log"
+		cons = "results/paths/{callset}_fasta/{callset}_path{path_id}_all_consensus.log",
+		split = "results/paths/{callset}_fasta/{callset}_path{path_id}_all_split.log"
 	wildcard_constraints:
-		callset = "|".join(callsets),
-		chrom = "all"
+		callset = "|".join(callsets)
 	resources:
 		mem_total_mb = 20000,
 		runtime_hrs = 4
 	benchmark:
-		"results/paths/{callset}_fasta/{callset}_path{path_id}_{chrom}_consensus_benchmark.txt"
+		"results/paths/{callset}_fasta/{callset}_path{path_id}_all_consensus_benchmark.txt"
 	conda:
 		"../envs/minigraph.yml"
 	params:
-		name = "{callset}_{path_id}_{chrom}"
+		name = "{callset}_{path_id}_all"
 	shell:
 		"""
-			bcftools consensus -f {input.reference} {input.vcf} 2> {log} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id} > {output.fasta_tmp1}
-			bedtools maskfasta -fi {output.fasta_tmp1} -bed {input.bed} -fo {output.fasta_tmp2}
-			cat {output.fasta_tmp2} | python3 workflow/scripts/split-fasta.py > {output.fasta}
+			bcftools consensus -f {input.reference} {input.vcf} 2> {log.cons} | python3 workflow/scripts/rename-fasta.py {wildcards.callset}_{wildcards.path_id} > {output.fasta_tmp1}
+			cat {output.fasta_tmp1} | python3 workflow/scripts/split_fasta.py -o {output.fasta} > {log.split}
 		"""
 
 
@@ -149,7 +124,7 @@ def aggregate_input(wildcards):
 	outfiles = []
 	for callset in callsets:
 		checkpoint_output = checkpoints.create_paths.get(callset=callset).output[0]
-		outfiles += [i for i in  expand("results/paths/" + callset +  "_fasta/" + callset + "_path{path_id}_{chrom}.fa", chrom=wildcards.chrom, path_id = glob_wildcards(os.path.join(checkpoint_output, callset + "_path{path_id}.vcf")).path_id)]
+		outfiles += [i for i in  expand("results/paths/" + callset +  "_fasta/" + callset + "_path{path_id}_all.fa", path_id = glob_wildcards(os.path.join(checkpoint_output, callset + "_path{path_id}.vcf")).path_id)]
 	return sorted(outfiles)
 
 rule extend_minigraph:
@@ -158,16 +133,16 @@ rule extend_minigraph:
 	"""
 	input:
 		paths = aggregate_input,
-		minigraph = lambda wildcards: config["minigraph_gfa"][wildcards.chrom]
+		minigraph = config["minigraph_gfa"]
 	output:
-		"results/minigraph/minigraph-extended_{chrom}.gfa"
+		"results/minigraph/minigraph-extended_all.gfa"
 	log:
-		"results/minigraph/minigraph_{chrom}.log"
+		"results/minigraph/minigraph_all.log"
 	resources:
 		mem_total_mb=200000,
-		runtime_hrs=10
+		runtime_hrs=30
 	benchmark:
-		"results/minigraph/minigraph_{chrom}_benchmark.txt"
+		"results/minigraph/minigraph_all_benchmark.txt"
 	threads: 24
 	conda:
 		"../envs/minigraph.yml"
