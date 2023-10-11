@@ -13,6 +13,9 @@ This pipeline extends an existing minigraph pangenome graph by adding variant ca
 * **minigraph GFA** files with variants added
 
 ## What the pipeline does
+
+![Pipeline overview](pipeline.png)
+
 * **Step 1:** remove variation in centromer regions and mask centromeres in reference genome
 * **Step 2:** group non-overlapping variants and prduce "pseudo" haplotypes. For each such pseudo haplotype, a VCF file is produced containing the variants it covers. Next, a consensus sequence is constructed for each such pseudo haplotype by inserting the variants into the reference genome.
 * **Step 3:** Add these new consensus sequences to the GFAs using minigraph
