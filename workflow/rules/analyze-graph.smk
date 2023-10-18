@@ -138,3 +138,25 @@ rule alignment_stats:
 		"""
 		{gaftools} stat {input} &> {output}
 		"""
+
+
+
+rule alignment_read_stats:
+	"""
+	Compute read-alignment statistics.
+	"""
+	input:
+		"results/statistics/mapping/{version}_all_{sample}_{method}.gaf"
+	output:
+		"results/statistics/mapping/{version}_all_{sample}_{method}_reads.stats"
+	wildcard_constraints:
+		version = "original|extended",
+		method = "minigraph|graphaligner"
+	resources:
+		mem_total_mb=10000
+	conda:
+		"../envs/minigraph.yml"
+	shell:
+		"""
+		cat {input} | python3 workflow/scripts/analyze-alignments.py &> {output}
+		"""

@@ -12,4 +12,5 @@ rule all:
 		"results/minigraph/minigraph-extended_all.gfa",
 		expand("results/statistics/bubbles/{version}_all_bubbles.tsv", version=["original", "extended"]),
 		expand("results/statistics/mapping/{version}_all_{sample}_{method}.stats", version=["original", "extended"], method=["minigraph"],  sample = samples),
+		expand("results/statistics/mapping/{version}_all_{sample}_{method}_reads.stats", version=["original", "extended"], method=["minigraph"],  sample = samples),
 		"results/statistics/plots/all_bubbles.pdf"
