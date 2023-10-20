@@ -199,6 +199,20 @@ def run_paths(filename, single, margin):
 			raise Exception(filename + ' contains multi-allelic records. Make sure to convert VCF to biallelic (bcftools norm -m-) before running this program.')
 		alt = alt_alleles[0]
 
+
+		# skip non-PASS variants
+		if (fields[6] != '.') and not ('PASS' in fields[6]):
+			sys.stderr.write("Skipping variant at position " + chrom + ":" + str(start) + " because FILTER is not PASS.\n")
+			skipped_variants += 1
+			continue
+
+
+		# skip indels (< 50 bp)
+		if (len(reference) < 50) and (len(alt) < 50):
+			sys.stderr.write("Skipping variant at position " + chrom + ":" + str(start) + " because it is an indel (< 50bp).\n")
+			skipped_variants += 1
+			continue
+
 		# skip symbolic records
 		if "<" in alt:
 			sys.stderr.write("Skipping variant at position " + chrom + ":" + str(start) + " because it is symbolic.\n")
