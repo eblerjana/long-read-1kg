@@ -13,4 +13,5 @@ rule all:
 		expand("results/statistics/bubbles/{version}_all_bubbles.tsv", version=["original", "extended"]),
 		expand("results/statistics/mapping/{version}_all_{sample}_{method}.stats", version=["original", "extended"], method=["minigraph"],  sample = samples),
 		expand("results/statistics/mapping/{version}_all_{sample}_{method}_reads.stats", version=["original", "extended"], method=["minigraph"],  sample = samples),
-		"results/statistics/plots/all_bubbles.pdf"
+		"results/statistics/plots/all_bubbles.pdf",
+		expand("results/statistics/graph/{version}_graph-stats.txt", version=["original", "extended"])
