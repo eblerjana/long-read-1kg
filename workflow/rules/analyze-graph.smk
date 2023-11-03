@@ -160,3 +160,19 @@ rule alignment_read_stats:
 		"""
 		cat {input} | python3 workflow/scripts/analyze-alignments.py &> {output}
 		"""
+
+
+rule graph_stats:
+	"""
+	Compute graph statistics.
+	"""
+	input:
+		graph = lambda wildcards: config["minigraph_gfa"] if wildcards.version == "original" else "results/minigraph/minigraph-extended_all.gfa"
+	output:
+		"results/statistics/graph/{version}_graph-stats.txt"
+	wildcard_constraints:
+		version = "original|extended"
+	shell:
+		"""
+		cat {input} | python3 workflow/scripts/analyze-graph.py &> {output}
+		"""
