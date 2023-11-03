@@ -1,18 +1,17 @@
 # callsets with variants to be added to the graph
 callset_vcfs:
- cuteSV: "/gpfs/project/projects/medbioinf/data/share/globus/1000g-ont/population_callsets/delins.sniffles.hg38.1kGP.ont.20Sep2023.vcf.gz"
- dellyDEL: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs/deletion.delly.hg38.1kGP.ont.19Sep2023.vcf.gz"
- dellyINS: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs/insertion.delly.hg38.1kGP.ont.14Sep2023.vcf.gz"
+ sniffles: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs-chm13/delins.sniffles.t2t.1kGP.ont.24Oct2023.vcf.gz"
+ dellyDEL: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs-chm13/deletion.delly.t2t.1kGP.ont.26Oct2023.vcf.gz"
+ dellyINS: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs-chm13/insertion.delly.t2t.1kGP.ont.26Oct2023.vcf.gz"
 
 # minigraph GFA of full genome.
 minigraph_gfa: "/gpfs/project/projects/medbioinf/data/share/globus/1000g-ont/rgfa/chm13-90c.r518_tagged_withseq.gfa"
 
 # reference sequence underlying the callsets
-#reference: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/chm13v2.0_maskedY_rCRS.fa"
-reference: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/1KG_ONT_VIENNA_hg38.fa"
+reference: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/chm13v2.0_maskedY_rCRS.fa"
 
 # BED to mask reference
-mask: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/extend-graph-by-callsets/empty.bed"
+mask: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/chm13v2.0_censat_v2.0_merged.bed"
 
 # path to gaftools executable
 gaftools: "/gpfs/project/projects/medbioinf/projects/1000g-ont/gaftools"
@@ -22,6 +21,7 @@ gaftools: "/gpfs/project/projects/medbioinf/projects/1000g-ont/gaftools"
 # optional arguments (needed for evaluation only)
 ####################################################### 
 
-# reads of the samples to be used for validation.
+# reads of the samples to be used for validation. Files must be in SAM/BAM/CRAM format.
+# # reads must be aligned to the same reference as listed above.
 reads:
- HG00513: "../data/raw-reads/HG00513.fa" 
+ HG00513: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/crams/HG00513.t2t.cram"
