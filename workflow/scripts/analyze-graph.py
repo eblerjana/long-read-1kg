@@ -9,7 +9,7 @@ for line in sys.stdin:
 	fields = line.strip().split()
 	if fields[0] == "S":
 		total_bp += len(fields[2])
-		if ("sniffles" in line) or ("delly" in line) or ("SVarp" in line):
+		if ("sniffles" in line) or ("delly" in line) or ("svarp" in line):
 			nr_added_nodes += 1
 		nr_total_nodes += 1
 	if fields[0] == "L":

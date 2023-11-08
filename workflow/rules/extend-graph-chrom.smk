@@ -143,7 +143,7 @@ rule extend_minigraph:
 		runtime_hrs=30
 	benchmark:
 		"results/minigraph/minigraph_all_benchmark.txt"
-	threads: 24
+	threads: 32
 	conda:
 		"../envs/minigraph.yml"
 	shell:

@@ -173,6 +173,7 @@ def print_individual_vcfs(variants, assignments, prefix):
 
 
 def run_paths(filename, single, margin):
+	random.seed(0)
 	# list of all variants in VCF
 	all_variants = []
 	# assigns a group to each variant

@@ -63,13 +63,30 @@ rule gaftools_order_gfa:
 #############################################
 
 
+rule extract_raw_reads:
+	"""
+	From the given bam/cram file, extract raw reads.
+	"""
+	input:
+		alignments = lambda wildcards: config["reads"][wildcards.sample],
+		reference = config["reference"]
+	output:
+		temp("results/statistics/mapping/raw-reads/{sample}_raw.fasta")
+	conda:
+		"../envs/minigraph.yml"
+	shell:
+		"""
+		samtools fasta --reference {input.reference} {input.alignments} > {output}
+		"""
+
+
 rule minigraph_align:
 	"""
 	Align reads with minigraph to the graphs
 	"""
 	input:
 		graph = lambda wildcards: config["minigraph_gfa"] if wildcards.version == "original" else "results/minigraph/minigraph-extended_all.gfa",
-		reads = lambda wildcards: config["reads"][wildcards.sample]
+		reads = "results/statistics/mapping/raw-reads/{sample}_raw.fasta"
 	output:
 		"results/statistics/mapping/{version}_all_{sample}_minigraph.gaf"
 	log:
@@ -96,7 +113,7 @@ rule graphaligner_align:
 	"""
 	input:
 		graph = lambda wildcards: config["minigraph_gfa"] if wildcards.version == "original" else "results/minigraph/minigraph-extended_all.gfa",
-		reads = lambda wildcards: config["reads"][wildcards.sample]
+		reads = "results/statistics/mapping/raw-reads/{sample}_raw.fasta"
 	output:
 		"results/statistics/mapping/{version}_all_{sample}_graphaligner.gaf"
 	log:
@@ -175,4 +192,36 @@ rule graph_stats:
 	shell:
 		"""
 		cat {input} | python3 workflow/scripts/analyze-graph.py &> {output}
+		"""
+
+
+rule analyze_alignment_differences:
+	"""
+	Analyze reads that only align in original/extended
+	graph.
+	"""
+	input:
+		original_gaf = "results/statistics/mapping/original_all_{sample}_{method}.gaf",
+		extended_gaf = "results/statistics/mapping/extended_all_{sample}_{method}.gaf",
+		original_gfa = config["minigraph_gfa"],
+		extended_gfa = "results/minigraph/minigraph-extended_all.gfa",
+		reads = lambda wildcards: config["reads"][wildcards.sample],
+		reference = config["reference"]
+	output:
+		original = "results/statistics/mapping/alignments_{sample}_{method}_only_original.bed",
+		extended = "results/statistics/mapping/alignments_{sample}_{method}_only_extended.bed"
+	log:
+		"results/statistics/mapping/alignments_{sample}_{method}.log"
+	wildcard_constraints:
+		method = "minigraph|graphaligner"
+	resources:
+		mem_total_mb = 20000,
+		runtime_hrs = 2
+	conda:
+		"../envs/minigraph.yml"
+	params:
+		outname = "results/statistics/mapping/alignments_{sample}_{method}"
+	shell:
+		"""
+		samtools view -h --reference {input.reference} {input.reads} | bedtools bamtobed -i -  | python3 workflow/scripts/analyze-differences.py {input.original_gaf} {input.extended_gaf} {input.original_gfa} {input.extended_gfa} -name1 original -name2 extended -outname {params.outname} &> {log}
 		"""
