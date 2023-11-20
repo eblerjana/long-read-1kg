@@ -1,0 +1,8 @@
+# tsv file of format: <sample-name> <path/to/callset.vcf>
+samples_list: "paths-hg38.tsv"
+
+# reference FASTA
+reference: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/1KG_ONT_VIENNA_hg38.fa"
+
+# how the output folder/file shall be named
+results: "SVarp-hg38"

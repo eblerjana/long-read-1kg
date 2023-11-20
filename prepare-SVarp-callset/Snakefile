@@ -1,0 +1,134 @@
+configfile: "config.yaml"
+
+# maps sample name to path of vcf
+sample_to_file = { f.strip().split()[0] : f.strip().split()[1] for f in open(config["samples_list"], 'r')}
+results = config["results"]
+
+rule all:
+	input:
+		expand("{results}/merged-vcfs/{results}.vcf.gz", results=results),
+		expand("{results}/merged-vcfs/{results}_biallelic_truvari.vcf.gz", results=results),
+		expand("{results}/merged-vcfs/{results}_biallelic_truvari_filtered.vcf.gz", results=results),
+		expand("{results}/merged-vcfs/{results}_biallelic_filtered.vcf.gz", results=results)
+
+
+rule preprocess_vcf:
+	"""
+	Make sure the sample column contains the correct sample name.
+	"""
+	input:
+		lambda wildcards: sample_to_file[wildcards.sample]
+	output:
+		"{results}/vcfs/{sample}.vcf.gz"
+	resources:
+		mem_total_mb = 5000
+	shell:
+		"""
+		cat {input} | python3 rename-sample.py {wildcards.sample} | bgzip > {output}
+		tabix -p vcf {output}
+		"""
+
+
+rule create_file_list:
+	"""
+	Create a list of samples to be merged in next step
+	"""
+	input:
+		vcfs = expand("{results}/vcfs/{sample}.vcf.gz", results=results, sample=sample_to_file.keys())
+	output:
+		"{results}/vcfs/filelist.tsv"
+	run:
+		f = open(output[0], 'w')
+		for name in input.vcfs:
+			print(name, file=f)
+		f.close()
+
+
+rule merge_vcfs:
+	"""
+	Merge single-sample VCFs into a multi-sample VCF.
+	"""
+	input:
+		"{results}/vcfs/filelist.tsv"
+	output:
+		"{results}/merged-vcfs/{results}.vcf.gz"
+	log:
+		"{results}/merged-vcfs/{results}.log"
+	resources:
+		mem_total_mb = 50000,
+		runtime_hrs = 2,
+		runtime_mins = 59
+	benchmark:
+		"{results}/merged-vcfs/{results}.benchmark"
+	conda:
+		"envs/bcftools.yml"
+	shell:
+		"""
+		bcftools merge -l {input} --missing-to-ref | bgzip > {output}
+		tabix -p vcf {output}
+		"""
+
+
+rule create_biallelic_vcf:
+	"""
+	Convert multi-allelic VCF into a bi-allelic
+	representation.
+	"""
+	input:
+		"{results}/merged-vcfs/{results}.vcf.gz"
+	output:
+		"{results}/merged-vcfs/{results}_biallelic.vcf.gz"
+	conda:
+		"envs/bcftools.yml"
+	resources:
+		mem_total_mb = 30000
+	shell:
+		"""
+		bcftools norm -m- {input} | bgzip > {output}
+		tabix -p vcf {output}
+		"""
+
+
+rule truvari_collapse:
+	"""
+	Perform SV merging using truvari.
+	"""
+	input:
+		vcf = "{results}/merged-vcfs/{results}_biallelic.vcf.gz",
+		reference = config["reference"]
+	output:
+		vcf = "{results}/merged-vcfs/{results}_biallelic_truvari.vcf.gz",
+		collapsed = "{results}/merged-vcfs/{results}_biallelic_truvari_collapsed.vcf.gz"
+	log:
+		"{results}/merged-vcfs/{results}_biallelic_truvari.log"
+	conda:
+		"envs/bcftools.yml"
+	resources:
+		mem_total_mb = 50000
+	shell:
+		"""
+	#	truvari collapse -r 500 -p 0.95 -P 0.95 -s 50 -S 100000 -i {input.vcf} -o {output.vcf} -c {output.collapsed} -f {input.reference} &> {log}
+		truvari collapse -i {input.vcf} -o {output.vcf} -c {output.collapsed} -f {input.reference} &> {log}
+		"""
+
+
+rule create_filtered_vcf:
+	"""
+	Create a filtered VCF with variants
+	"""
+	input:
+		"{filename}.vcf.gz"
+	output:
+		pdf = "{filename}_filtered.pdf",
+		vcf= "{filename}_filtered.vcf.gz"
+	log:
+		"{filename}_filtered.log"
+	conda:
+		"envs/bcftools.yml"
+	resources:
+		mem_total_mb=10000
+	shell:
+		"""
+		zcat {input} | python3 count-carriers.py --min-count 2 --max-count 1000 --outname {output.pdf} 2> {log} | bgzip > {output.vcf}
+		tabix -p vcf {output.vcf}
+		"""
