@@ -9,7 +9,7 @@ The pipeline expects the following inputs:
 * **multi-sample VCF** files with sequence resolved variant calls across samples
 * **minigraph GFA** files containing existing graph to be extended
 * **reference FASTA** containing the reference sequence underlying the callsets
-* **BED file** file used to mask certain regions (like centromeres) to avoid adding to complex sequence to the graph
+* **BED file**  used to mask certain regions (like centromeres) to avoid adding to complex sequence to the graph
 
 The locations of these files need to be specified in the ``config/config.yaml`` file. The config file contains the following fields:
 
