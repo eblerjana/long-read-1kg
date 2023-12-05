@@ -1,7 +1,7 @@
 # callsets with variants to be added to the graph
 callset_vcfs:
- sniffles: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs/delins.sniffles.hg38.liftedT2T.13Nov2023.vcf.gz"
- delly: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs/delins.delly.hg38.liftedT2T.13Nov2023.vcf.gz"
+ sniffles: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs/delins.sniffles.hg38.liftedT2T.13Nov2023.nygc.vcf.gz"
+ delly: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/data/population-vcfs/delins.delly.hg38.liftedT2T.13Nov2023.nygc.vcf.gz"
  SVarp: "/gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/prepare-SVarp-callset/SVarp-hg38/merged-vcfs/SVarp-hg38_biallelic_truvari_filtered.vcf.gz"
 
 # minigraph GFA of full genome.
