@@ -74,6 +74,8 @@ rule extract_raw_reads:
 		temp("results/statistics/mapping/raw-reads/{sample}_raw.fasta")
 	conda:
 		"../envs/minigraph.yml"
+	resources:
+		mem_total_mb = 50000
 	shell:
 		"""
 		samtools fasta --reference {input.reference} {input.alignments} > {output}
