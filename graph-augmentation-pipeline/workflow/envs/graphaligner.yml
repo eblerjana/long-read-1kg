@@ -1,7 +1,7 @@
 name: minigraph
 channels:
-  - conda-forge
-  - bioconda
-  - main
+  - http://conda.repo.test.hhu.de/conda-forge
+  - http://conda.repo.test.hhu.de/bioconda
+  - http://conda.repo.test.hhu.de/main
 dependencies:
   - graphaligner

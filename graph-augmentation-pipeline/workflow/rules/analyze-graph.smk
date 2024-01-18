@@ -38,6 +38,26 @@ rule plot_bubble_sizes:
 		"python3 workflow/scripts/plot-histogram.py -files {input.original} {input.extended} -labels original_graph_all augmented_graph_all -outname {output}"
 
 
+rule plot_distance_histogram:
+	"""
+	Plot histogram of bubble distances
+	"""
+	input:
+		original = "results/statistics/bubbles/original_all_bubbles.tsv",
+		extended = "results/statistics/bubbles/extended_all_bubbles.tsv"
+	output:
+		tsv="results/statistics/plots/bubble_distances.tsv",
+		pdf="results/statistics/plots/bubble_distances.pdf"
+	log:
+		"results/statistics/plots/bubble_distances.log"
+	conda:
+		"../envs/minigraph.yml"
+	shell:
+		"""
+		bedtools closest -d -t first -a {input.extended} -b {input.original} > {output.tsv}
+		cat {output.tsv} | python3 workflow/scripts/plot-distances.py -outname {output.pdf} &> {log}
+		"""
+
 
 rule gaftools_order_gfa:
 	"""

@@ -15,4 +15,5 @@ rule all:
 		expand("results/statistics/mapping/{version}_all_{sample}_{method}_reads.stats", version=["original", "extended"], method=["minigraph"],  sample = samples),
 		"results/statistics/plots/all_bubbles.pdf",
 		expand("results/statistics/graph/{version}_graph-stats.txt", version=["original", "extended"]),
-		expand("results/statistics/mapping/alignments_{sample}_{method}_only_{version}.bed", sample = samples, version=["original", "extended"], method = ["minigraph"])
+		expand("results/statistics/mapping/alignments_{sample}_{method}_only_{version}.bed", sample = samples, version=["original", "extended"], method = ["minigraph"]),
+		"results/statistics/plots/bubble_distances.pdf"
