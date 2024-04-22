@@ -2,6 +2,10 @@
 
 Given single-sample VCFs produced from SVarp calls, this pipeline merges them into a multi-sample VCF. 
 
+## Dependencies
+
+* conda
+* snakemake
 
 ## Inputs
 
