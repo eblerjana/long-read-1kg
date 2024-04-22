@@ -2,6 +2,11 @@
 
 This pipeline extends an existing minigraph pangenome graph by adding variant calls produced by different callsets (such as Delly, Sniffles2 or SVarp).
 
+## Dependencies
+
+* conda
+* snakemake
+
 ## Inputs
 
 The pipeline expects the following inputs:
