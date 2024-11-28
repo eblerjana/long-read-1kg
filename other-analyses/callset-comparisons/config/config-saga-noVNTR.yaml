@@ -1,0 +1,36 @@
+callset_vcfs:
+ MC-decomb: "data/MC-hgsvc3-hprc-chm13_filtered_ids_biallelic.noVNTR.vcf.gz"
+ PAV: "data/variants_T2T-CHM13_sv_insdel_alt_HGSVC2024v1.0.noVNTR.vcf.gz"
+ SAGA-GT: "data/final-vcf.unphased.noVNTR.vcf.gz"
+
+combinations:
+ SAGA-GT_MC: ['SAGA-GT', 'MC-decomb']
+ SAGA-GT_PAV: ['SAGA-GT', 'PAV']
+
+
+# If reference is provided, all callsets will be normalized prior to comparison.
+# If empty string ("") is provided, normalization is skipped.
+reference: "/gpfs/project/projects/medbioinf/users/ebler/hgsvc3/data/reference/chm13v2.0.fa"
+
+# samples to restrict the analysis to. If left empty, all variants in VCF are considered.
+samples: ['HG00096',
+'HG00171',
+'HG00268',
+'HG00513',
+'HG00731',
+'HG01596',
+'HG01890',
+'HG02554',
+'HG02953',
+'HG03009',
+'NA18989',
+'NA19129',
+'NA19238',
+'NA19331',
+'NA19347',
+'NA20847']
+
+# if desired, one can set a range for allele frequencies here. Only calls with allele frequencies within this
+# range are considered. Only relevant if input VCFs are multi-sample.
+min_af: 0.0
+max_af: 1.0

@@ -1,0 +1,15 @@
+configfile: "config/config.yaml"
+
+SAMPLES = config['samples']
+COMBINATIONS = config['combinations']
+
+include: "rules/compare-vcfs.smk"
+
+if not SAMPLES:
+	SAMPLES = ['all']
+
+rule all:
+	input:
+		expand("results/vcf-stats/{callset}.stats", callset = [c for c in config["callset_vcfs"].keys()]),
+		expand("results/{combination}/intersection/intersection_upset_{combination}_{sample}.pdf", sample = SAMPLES, combination = COMBINATIONS.keys()),
+		expand("results/{combination}/intersection/intersection_bar_{combination}.pdf", combination = COMBINATIONS.keys())

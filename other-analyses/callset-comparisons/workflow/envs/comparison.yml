@@ -1,0 +1,8 @@
+name: comparison
+dependencies:
+  - samtools
+  - bcftools
+  - bedtools
+  - matplotlib
+  - pandas
+  - upsetplot

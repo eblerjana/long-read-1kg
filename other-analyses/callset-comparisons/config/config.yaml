@@ -1,0 +1,21 @@
+callset_vcfs:
+ callsetname1: "/path/to/callset1.vcf.gz"
+ callsetname2: "/path/to/callset2.vcf.gz"
+ callsetname3: "/path/to/callset3.vcf.gz"
+
+combinations:
+ combination1: ['callsetname1', 'callsetname2']
+ combination2: ['callsetname2', 'callsetname3']
+
+
+# If reference is provided, all callsets will be normalized prior to comparison.
+# If empty string ("") is provided, normalization is skipped.
+reference: "/path/to/reference.fa"
+
+# samples to restrict the analysis to. If left empty, all variants in VCF are considered.
+samples: ['HG00733', 'HG02818']
+
+# if desired, one can set a range for allele frequencies here. Only calls with allele frequencies within this
+# range are considered. Only relevant if input VCFs are multi-sample.
+min_af: 0.0
+max_af: 1.0

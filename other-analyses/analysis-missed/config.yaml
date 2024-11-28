@@ -1,0 +1,35 @@
+
+
+intersections:
+  "606": 
+        table: "data/606_intersection_all.tsv"
+        present: "in_HGSVC in_pav_606 in_sniffles2_606"
+        absent: "in_1KG-ONT"
+        baseline: "in_pav_606 in_sniffles2_606"
+  "806":
+        table: "data/806_intersection_all.tsv"
+        present: "in_HGSVC in_pav_806 in_sniffles2_806"
+        absent: "in_1KG-ONT"
+        baseline: "in_pav_806 in_sniffles2_806"
+  "805-9":
+        table: "data/805-9_intersection_all.tsv"
+        present: "in_HGSVC in_pav_805-9 in_sniffles2_805-9"
+        absent: "in_1KG-ONT"
+        baseline: "in_pav_805-9 in_sniffles2_805-9"
+  "805-4":
+        table: "data/805-4_intersection_all.tsv"
+        present: "in_HGSVC in_pav_805-4 in_sniffles2_805-4"
+        absent: "in_1KG-ONT"
+        baseline: "in_pav_805-4 in_sniffles2_805-4"
+
+
+graph_bubbles: /gpfs/project/projects/medbioinf/users/ebler/long-read-1kg/graph-augmentation/results/statistics/bubbles/extended_all_bubbles.tsv
+panel_vcf: /gpfs/project/projects/medbioinf/data/share/globus/hhu-1000g-ont/giggles-genotyping/augmented-graph/prepared-panel/giggles-ready_multiallelic.vcf.gz
+panel_biallelic_vcf: /gpfs/project/projects/medbioinf/data/share/globus/hhu-1000g-ont/giggles-genotyping/augmented-graph/prepared-panel/giggles-ready_biallelic.vcf.gz 
+unfiltered_genotypes_vcf: /gpfs/project/projects/medbioinf/data/share/globus/hhu-1000g-ont/giggles-genotyping/augmented-graph/multisample-genotypes/biallelic.ac0-filtered.vcf.gz
+filtered_genotypes_vcf: /gpfs/project/projects/medbioinf/data/share/globus/hhu-1000g-ont/genotype-filtering/augmented/biallelic.filtered.all-samples.vcf.gz
+
+
+beds:
+  repeats: "chm13-repeat-masker-merged.bed"
+  segdups: "chm13-segdups-merged.bed"

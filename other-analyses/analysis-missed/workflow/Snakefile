@@ -1,0 +1,21 @@
+configfile: "config.yaml"
+
+INTERSECTIONS = config["intersections"]
+PANEL_VCF = config["panel_vcf"]
+GRAPH_BUBBLES = config["graph_bubbles"]
+UNFILTERED = config["unfiltered_genotypes_vcf"]
+FILTERED = config["filtered_genotypes_vcf"]
+PANEL_BI_VCF = config["panel_biallelic_vcf"]
+
+BED = config["beds"]
+
+include: "rules/analyze-missed.smk"
+
+print(INTERSECTIONS)
+
+
+rule all:
+	input:
+		expand("results/{sample}/{sample}_missed-variants-closest.pdf", sample = INTERSECTIONS.keys()),
+		expand("results/{sample}/{sample}_missed-inside-{region}.bed", sample = INTERSECTIONS.keys(), region = ["panel", "graph", "sites", "unfiltered-gt", "filtered-gt"]),
+		expand("results/{sample}/{region}/{sample}_{set}_{region}_inside.bed", sample = INTERSECTIONS.keys(), set = ["baseline", "missed"], region =  [k for k in BED.keys()])
