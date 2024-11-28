@@ -27,6 +27,10 @@ gunzip data/1KG_ONT_VIENNA_hg38.fa.gz
 wget -P data/ http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1KG_ONT_VIENNA/hg38/HG00513.hg38.cram
 ```
 
+### Install gaftools
+
+See https://github.com/marschall-lab/gaftools
+
 ## 2. Prepare config file
 
 ``` bat
