@@ -8,9 +8,16 @@ The SAGA results: https://www.biorxiv.org/content/10.1101/2024.04.18.590093v1 ca
 
 ### Callsets
 
-``` bat
+* sniffles:
+ ``` bat
 TODO
 ```
+* delly:
+ ``` bat
+TODO
+```
+* SVarp: run pipeline: https://github.com/eblerjana/long-read-1kg/tree/main/prepare-SVarp-callset and provide the output VCF
+
 ### Minigraph
 ``` bat
 wget -p data/ https://zenodo.org/records/6983934/files/chm13-90c.r518.gfa.gz?download=1
@@ -39,7 +46,7 @@ See https://github.com/marschall-lab/gaftools
 callset_vcfs:
  sniffles: "data/delins.sniffles.hg38.liftedT2T.13Nov2023.nygc.vcf.gz"
  delly: "data/delins.delly.hg38.liftedT2T.13Nov2023.nygc.vcf.gz"
- SVarp: "data/SVarp-hg38_biallelic_truvari_filtered.vcf.gz"
+ SVarp: "data/SVarp_biallelic_truvari_filtered.vcf.gz"
 
 # minigraph GFA of full genome.
 minigraph_gfa: "data/chm13-90c.r518.gfa"
