@@ -64,5 +64,9 @@ reads:
  HG00513: "data/HG00513.hg38.cram"
 
 ```
+## 3. Run pipeline
 
+``` bat
+snakemake --use-conda -j <number of cores>
+```
 
