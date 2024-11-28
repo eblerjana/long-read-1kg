@@ -1,6 +1,6 @@
 # Graph augmentation pipeline
 
-This pipeline extends an existing minigraph pangenome graph by adding variant calls produced by different callsets (such as Delly, Sniffles2 or SVarp). For details on how to produce the results described here: https://www.biorxiv.org/content/10.1101/2024.04.18.590093v1 , see file `` SAGA.md ``.
+This pipeline extends an existing minigraph pangenome graph by adding variant calls produced by different callsets (such as Delly, Sniffles2 or SVarp). For details on how to re-produce the results described here: https://www.biorxiv.org/content/10.1101/2024.04.18.590093v1 , see file `` SAGA.md ``.
 
 ## Dependencies
 
