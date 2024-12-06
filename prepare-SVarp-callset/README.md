@@ -1,6 +1,7 @@
 # Pipeline to create multi-sample VCF from single-sample SVarp calls
 
-Given single-sample VCFs produced from SVarp calls, this pipeline merges them into a multi-sample VCF. 
+Given single-sample VCFs produced from SVarp calls, this pipeline merges them into a multi-sample VCF. For details on how to re-produce the results described here: https://www.biorxiv.org/content/10.1101/2024.04.18.590093v1 , see file `` SAGA.md ``.
+
 
 ## Dependencies
 
